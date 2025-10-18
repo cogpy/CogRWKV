@@ -159,10 +159,11 @@ class PatternMatcher:
         
         self._match_pattern(pattern, atom, bindings, [], query)
         
-        # Continue with next outgoing pattern
+        # Continue with next outgoing pattern  
         temp_results = []
         self._match_pattern(pattern, atom, bindings, temp_results, query)
         
+        # Collect results from this pattern match
         for temp_result in temp_results:
             self._match_outgoing(patterns, atoms, index + 1, temp_result.bindings,
                                results, query)

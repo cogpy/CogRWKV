@@ -281,9 +281,10 @@ class AutonomousAgent:
             })
     
     def register_action(self, name: str, executor: Callable[['AutonomousAgent'], Any], 
-                       description: str = ""):
+                       description: str = "", action_id: Optional[str] = None):
         """Register an action that the agent can perform."""
         action = Action(
+            id=action_id or str(uuid.uuid4()),
             name=name,
             description=description,
             executor=executor

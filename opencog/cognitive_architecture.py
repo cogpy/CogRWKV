@@ -400,10 +400,16 @@ class CognitiveArchitecture:
         cycle_duration = time.time() - cycle_start
         self.statistics['last_cycle_duration'] = cycle_duration
         
-        if self.statistics['cognitive_cycles'] > 0:
-            total_duration = (self.statistics['average_cycle_duration'] * 
-                            (self.statistics['cognitive_cycles'] - 1) + cycle_duration)
-            self.statistics['average_cycle_duration'] = total_duration / self.statistics['cognitive_cycles']
+        # Use exponential moving average for better numerical stability
+        if self.statistics['cognitive_cycles'] == 1:
+            self.statistics['average_cycle_duration'] = cycle_duration
+        else:
+            # Exponential moving average with alpha = 0.1
+            alpha = 0.1
+            self.statistics['average_cycle_duration'] = (
+                alpha * cycle_duration + 
+                (1 - alpha) * self.statistics['average_cycle_duration']
+            )
         
         cycle_results['cycle_info'] = {
             'processes_executed': processes_executed,

@@ -202,7 +202,23 @@ class AtomSpace:
     
     def create_node(self, atom_type: str, name: str, 
                    truth_value: Optional[TruthValue] = None) -> Node:
-        """Create and add a node to the AtomSpace."""
+        """Create and add a node to the AtomSpace. Returns existing node if duplicate found."""
+        # Check for existing node with same type and name
+        existing_nodes = self.get_atoms_by_name(name)
+        for existing in existing_nodes:
+            if existing.atom_type == atom_type:
+                # Update truth value if provided and merge with existing
+                if truth_value:
+                    existing_tv = existing.truth_value
+                    # Merge truth values by taking weighted average
+                    combined_strength = (existing_tv.strength * existing_tv.confidence + 
+                                       truth_value.strength * truth_value.confidence) / (
+                                       existing_tv.confidence + truth_value.confidence + 1e-6)
+                    combined_confidence = min(1.0, existing_tv.confidence + truth_value.confidence)
+                    existing.truth_value = TruthValue(combined_strength, combined_confidence)
+                return existing
+        
+        # Create new node if no duplicate found
         node = Node(atom_type, name, truth_value)
         return self.add_atom(node)
     

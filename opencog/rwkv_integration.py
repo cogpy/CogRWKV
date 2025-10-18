@@ -167,7 +167,10 @@ class LanguageProcessor:
             response_tokens = self.pipeline.encode(response_text)
             
             # Calculate confidence based on response length and parameters
-            confidence = min(1.0, len(response_text) / 50.0 * params['temperature'])
+            # Confidence heuristic: longer responses (up to 50 chars) indicate higher confidence
+            # Modulated by temperature (higher temp = more uncertainty)
+            MIN_RESPONSE_LENGTH = 50.0
+            confidence = min(1.0, len(response_text) / MIN_RESPONSE_LENGTH * params['temperature'])
             
             processing_time = time.time() - start_time
             
@@ -193,12 +196,17 @@ class LanguageProcessor:
             return [0.0] * 512  # Return zero embedding
         
         try:
+            # Import torch here to handle cases where it might not be available
+            import torch
             # Simplified embedding: use model's internal representations
             tokens = self.pipeline.encode(text)
             # In real implementation, would extract hidden states
             # For now, return mock embedding based on tokens
             embedding = [float(sum(tokens)) / len(tokens) if tokens else 0.0] * 512
             return embedding
+        except ImportError:
+            print("Torch not available, using zero embedding")
+            return [0.0] * 512
         except Exception as e:
             print(f"Error creating embedding: {e}")
             return [0.0] * 512
