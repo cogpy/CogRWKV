@@ -174,6 +174,8 @@ class PatternMatcher:
             self._collect_bindings(pattern.outgoing, atom.outgoing_set, 0, new_bindings, nested_bindings)
             for bound in nested_bindings:
                 self._match_outgoing(patterns, atoms, index + 1, bound, results, query)
+        elif pattern.outgoing:
+            return  # Structural mismatch: pattern expects sub-structure but atom has none
         else:
             self._match_outgoing(patterns, atoms, index + 1, new_bindings, results, query)
     
@@ -205,6 +207,8 @@ class PatternMatcher:
             self._collect_bindings(pattern.outgoing, atom.outgoing_set, 0, new_bindings, nested)
             for bound in nested:
                 self._collect_bindings(patterns, atoms, index + 1, bound, collected)
+        elif pattern.outgoing:
+            return  # Structural mismatch: pattern expects sub-structure but atom has none
         else:
             self._collect_bindings(patterns, atoms, index + 1, new_bindings, collected)
     
