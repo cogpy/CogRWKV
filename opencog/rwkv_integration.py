@@ -170,7 +170,7 @@ class LanguageProcessor:
             # Confidence heuristic: longer responses (up to 50 chars) indicate higher confidence
             # Modulated by temperature (higher temp = more uncertainty)
             MIN_RESPONSE_LENGTH = 50.0
-            confidence = min(1.0, len(response_text) / MIN_RESPONSE_LENGTH * params['temperature'])
+            confidence = min(1.0, len(response_text) / MIN_RESPONSE_LENGTH / params['temperature'])
             
             processing_time = time.time() - start_time
             
