@@ -51,6 +51,8 @@ class Goal:
     
     def check_success(self) -> bool:
         """Check if goal is successfully completed."""
+        if not self.success_conditions:
+            return False
         return all(condition() for condition in self.success_conditions)
     
     def check_failure(self) -> bool:
