@@ -169,6 +169,8 @@ class PatternMatcher:
         
         if pattern.outgoing and atom.is_link():
             if len(pattern.outgoing) != atom.get_arity():
+        if pattern.outgoing and atom.is_link():
+            if len(pattern.outgoing) != atom.get_arity():
                 return
             nested_bindings = []
             self._collect_bindings(pattern.outgoing, atom.outgoing_set, 0, new_bindings, nested_bindings)
