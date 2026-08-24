@@ -293,19 +293,27 @@ class AtomSpace:
                 atom_map[node.id] = node
                 self.add_atom(node)
         
-        # Second pass: create links
-        for atom_data in data.get('atoms', []):
-            if atom_data.get('outgoing'):
-                truth_value = TruthValue(
-                    atom_data['truth_value']['strength'],
-                    atom_data['truth_value']['confidence']
-                )
-                outgoing_atoms = [atom_map[atom_id] for atom_id in atom_data['outgoing']]
-                link = Link(atom_data['type'], outgoing_atoms, truth_value)
-                link.id = atom_data['id']  # Preserve original ID
-                link.metadata = atom_data.get('metadata', {})
-                atom_map[link.id] = link
-                self.add_atom(link)
+        # Second pass: create links iteratively (handles link-to-link references)
+        pending_links = [ad for ad in data.get('atoms', []) if ad.get('outgoing')]
+        while pending_links:
+            remaining = []
+            for atom_data in pending_links:
+                if all(aid in atom_map for aid in atom_data['outgoing']):
+                    truth_value = TruthValue(
+                        atom_data['truth_value']['strength'],
+                        atom_data['truth_value']['confidence']
+                    )
+                    outgoing_atoms = [atom_map[atom_id] for atom_id in atom_data['outgoing']]
+                    link = Link(atom_data['type'], outgoing_atoms, truth_value)
+                    link.id = atom_data['id']  # Preserve original ID
+                    link.metadata = atom_data.get('metadata', {})
+                    atom_map[link.id] = link
+                    self.add_atom(link)
+                else:
+                    remaining.append(atom_data)
+            if len(remaining) == len(pending_links):
+                break  # No progress — unresolvable references
+            pending_links = remaining
     
     def __str__(self):
         return f"AtomSpace({self.size()} atoms)"

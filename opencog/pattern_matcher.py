@@ -157,16 +157,62 @@ class PatternMatcher:
         pattern = patterns[index]
         atom = atoms[index]
         
-        self._match_pattern(pattern, atom, bindings, [], query)
+        if not self._atom_matches_pattern(atom, pattern):
+            return
         
-        # Continue with next outgoing pattern  
-        temp_results = []
-        self._match_pattern(pattern, atom, bindings, temp_results, query)
+        new_bindings = bindings.copy()
+        if pattern.is_variable:
+            existing_binding = new_bindings.get(pattern.variable_name)
+            if existing_binding is not None and existing_binding != atom:
+                return
+            new_bindings[pattern.variable_name] = atom
         
-        # Collect results from this pattern match
-        for temp_result in temp_results:
-            self._match_outgoing(patterns, atoms, index + 1, temp_result.bindings,
-                               results, query)
+        if pattern.outgoing and atom.is_link():
+            if len(pattern.outgoing) != atom.get_arity():
+        if pattern.outgoing and atom.is_link():
+            if len(pattern.outgoing) != atom.get_arity():
+                return
+            nested_bindings = []
+            self._collect_bindings(pattern.outgoing, atom.outgoing_set, 0, new_bindings, nested_bindings)
+            for bound in nested_bindings:
+                self._match_outgoing(patterns, atoms, index + 1, bound, results, query)
+        elif pattern.outgoing:
+            return  # Structural mismatch: pattern expects sub-structure but atom has none
+        else:
+            self._match_outgoing(patterns, atoms, index + 1, new_bindings, results, query)
+    
+    def _collect_bindings(self, patterns: List[Pattern], atoms: List[Atom],
+                         index: int, bindings: Dict[str, Atom],
+                         collected: List[Dict[str, Atom]]):
+        """Collect variable bindings from matching nested patterns without checking completeness."""
+        if index >= len(patterns):
+            collected.append(bindings.copy())
+            return
+        
+        pattern = patterns[index]
+        atom = atoms[index]
+        
+        if not self._atom_matches_pattern(atom, pattern):
+            return
+        
+        new_bindings = bindings.copy()
+        if pattern.is_variable:
+            existing = new_bindings.get(pattern.variable_name)
+            if existing is not None and existing != atom:
+                return
+            new_bindings[pattern.variable_name] = atom
+        
+        if pattern.outgoing and atom.is_link():
+            if len(pattern.outgoing) != atom.get_arity():
+                return
+            nested = []
+            self._collect_bindings(pattern.outgoing, atom.outgoing_set, 0, new_bindings, nested)
+            for bound in nested:
+                self._collect_bindings(patterns, atoms, index + 1, bound, collected)
+        elif pattern.outgoing:
+            return  # Structural mismatch: pattern expects sub-structure but atom has none
+        else:
+            self._collect_bindings(patterns, atoms, index + 1, new_bindings, collected)
     
     def _atom_matches_pattern(self, atom: Atom, pattern: Pattern) -> bool:
         """Check if an atom matches a pattern."""
