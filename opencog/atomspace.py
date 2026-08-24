@@ -312,7 +312,15 @@ class AtomSpace:
                 else:
                     remaining.append(atom_data)
             if len(remaining) == len(pending_links):
-                break  # No progress — unresolvable references
+                unresolved = [
+                    aid
+                    for atom_data in remaining
+                    for aid in atom_data['outgoing']
+                    if aid not in atom_map
+                ]
+                raise KeyError(
+                    f"Cannot import links with unresolved references: {unresolved}"
+                )
             pending_links = remaining
     
     def __str__(self):
